@@ -436,7 +436,7 @@ class Screen(QWidget):
         lst = []
 
         for p in ports:
-            print (type(p.device))
+            # print (type(p.device))
             self.port.addItem(p.device)
 
     # Get de Baudrate selected
@@ -452,8 +452,7 @@ class Screen(QWidget):
     
     # Start thread of Serial Communication
     def onConnect(self, event):
-        global stop_threads
-        global stop_threads_1 
+        global stop_threads,stop_threads_1, flag_data 
         print('port: '+ self.port_selec +'Baud: '+self.baud_selec)
         # print(self.connect_button.text())
         if self.connect_button.text()=='Connect':
@@ -468,9 +467,11 @@ class Screen(QWidget):
                 self.ser_msg.setText("Open")
                 self.port.setDisabled(True)
                 self.baud.setDisabled(True)
+                flag_data = True
         else:
             self.connect_button.setText('Connect')
             stop_threads = True
+            flag_data = False
             self.ser_msg.setText("Close")            
             # self.Serial.endApplication()
             self.port.setDisabled(False)
@@ -510,12 +511,9 @@ class DataPlot:
     def save_all(self,data1,data2,tim):
         ######## DATA1 ##########################
         self.axis_t.append(datetime.now().strftime('%H:%M:%S'))
-        # print(self.axis_t)
         self.axis_data1.append(data1)
-        # print(self.axis_data1)
         ######## DATA2 ##############
         self.axis_data2.append(data2)
-        # print(self.axis_data2)
 
     # function for save data incomming for serial port         
     def save_data(self, data1,data2):
@@ -562,12 +560,14 @@ class RealtimePlot:
     # Plotting Real timeF
     def loop (self):
         while True:
-            global stop_threads_1, event
+            global stop_threads_1, event, flag_data
             if stop_threads_1:
                 break
             # print(data.axis_data1)
             # print(data.axis_data2)
-            data.save_all(data.data1,data.data2,data.tim)
+            if flag_data:
+                data.save_all(data.data1,data.data2,data.tim)
+            
             self.anim()
             time.sleep(float(self._time))
     
