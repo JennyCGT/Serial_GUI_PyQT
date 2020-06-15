@@ -15,7 +15,7 @@ mtp.use('QT5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.animation as manim
-from datetime import datetime
+from datetime import datetime, timedelta
 from PyQt5.QtCore import QDateTime, Qt, QTimer
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
         QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
@@ -36,9 +36,6 @@ flag_save= False
 analog =0
 dato1=0
 event = Event()
-
-# ser = serial.Serial()
-
 data_serial = [b'', b'', b'',b'']
 
 # Class for serial Comunication 
@@ -55,7 +52,6 @@ class Serial_com:
         self.SOH = b'H'
         self.STX = b'T'
         self.ETX = b'E'
-        self.flag_data= False
         # Thread for reading serial Port
         self.t1 = Thread(target = self.loop)
         self.t1.start()
@@ -67,7 +63,7 @@ class Serial_com:
         c=['','','','']
         global data_serial
         while True:
-            global stop_threads, data_serial, flag_data, event
+            global stop_threads, data_serial, event
             if stop_threads: 
                 break
                 # stop_threads_1= True
@@ -101,27 +97,21 @@ class Serial_com:
     def update (self):
         i = 0
         while True:
-            global flag_data, event
+            global  event
             if stop_threads:
                 break
             if event.is_set():
                 # print(data.tim)
-                print(data.axis_t[-1],data.axis_data1[-1], data.axis_data2[-1])
-                # frame.value_data1.setText(str(data.axis_data1[-1]))
-                # frame.value_data2.setText(str(data.axis_data2[-1]))
-                # frame.Refresh()
+                # print(data.axis_t[-1],data.axis_data1[-1], data.axis_data2[-1])
                 frame.update()
                 global flag_save
                 if(flag_save):
                     # print('guardar')
-                    data_save=[data.tim ,str(frame.baud_selec),str(data.axis_data1[-1]),str(data.axis_data2[-1])]
-                    print(data_save)
-                    # frame.text_msg.setText('Data 1:    '+str(data1) +'      Data2:     '+str(data2))
+                    data_save=[data.tim ,str(frame.baud_selec),str(data.data1),str(data.data2)]
+                    # print(data_save)
                     append_list_as_row(frame.path_dir,frame.data_rec, data_save)
 
                 event.clear()
-                # look.release()
-                # flag_data= False
 
 # Lists serial port names
 # A list of the serial ports available on the system
@@ -151,7 +141,7 @@ def serial_ports():
 # Function for save data in CSV file
 def append_list_as_row(path,file_name, list_of_elem):
     # Open file in append mode
-    f='csv/'+"\\"+file_name+'.csv'
+    f='csv/'+file_name+'.csv'
     with open(f, 'a', newline='') as write_obj:    
         # Create a writer object from csv module
         csv_writer = writer(write_obj)
@@ -164,8 +154,6 @@ def append_list_as_row(path,file_name, list_of_elem):
 class Screen(QWidget):
     def __init__(self, parent = None):
         super(Screen, self).__init__(parent)
-        # wx.Frame.__init__(self, None, -1, name='Name')
-        # self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.port_selec=''
         self.baud_selec='115200'
         self.choices=[]
@@ -173,73 +161,54 @@ class Screen(QWidget):
         self.y_min = 0
         self.path_dir = 'C:'
         self.data_rec=''
+        self.time_upd= 0.5
         # panel = self
 
         grid = QGridLayout()
         grid.setColumnStretch(0, 2)
         grid.setColumnStretch(1, 1)        
         
-        grid.setRowStretch(1,2)
+        # grid.setRowStretch(0,1)        
+        grid.setRowStretch(2,5)
+        # grid.setRowStretch(2,1)
+
+        grid.setRowMinimumHeight(0,1)
+
         grid.addWidget(self.serial_settings(), 0, 0)
-        grid.addWidget(self.plot_settings(), 1, 0)
-        grid.addWidget(self.message(),2,0)
+        grid.addWidget(self.plot_settings(), 1, 0,2,1)
+        grid.addWidget(self.message(),3,0,1,2)
 
         grid.addWidget(self.record_settings(), 0, 1)
         grid.addWidget(self.current_settings(), 1, 1)
         grid.addWidget(self.graph_settings(), 2, 1)
         self.setLayout(grid)
 
-        self.setFixedSize(1000,500)
+        self.setFixedSize(1000,600)
         self.setWindowTitle('Datalogger')
         # panel.SetBackgroundColour('#364958')
         # panel.SetBackgroundColour('#5B5F97')
         self.show()
 
-        # self.timer = QTimer()
-        # self.timer.setInterval(1000)
-        # self.timer.timeout.connect(self.recurring_timer)
-        # self.timer.start()
-
-    def createExampleGroup(self):
-        groupBox = QGroupBox("Best Food")
-
-        radio1 = QRadioButton("&Radio pizza")
-        radio2 = QRadioButton("R&adio taco")
-        radio3 = QRadioButton("Ra&dio burrito")
-
-        radio1.setChecked(True)
-
-        vbox = QVBoxLayout()
-        vbox.addWidget(radio1)
-        vbox.addWidget(radio2)
-        vbox.addWidget(radio3)
-        vbox.addStretch(1)
-        groupBox.setLayout(vbox)
-
-        return groupBox    
 
 # --------------------------------BOX SERIAL SETTINGS-----------------------------------------------------------
     def serial_settings(self):
         self.box_serial = QGroupBox("Serial Settings")
         text_port = QLabel("Port")
         # text_port.SetBackgroundColour('#F1F7EE')
-        # self.ports = list(serial.tools.list_ports.comports())
-        item = []
-        # for i in self.ports:
-        #     item.append(i.device)
         
         self.port = QComboBox()
         self.port.addItem("Choose a Port")
-        self.ports =QSerialPortInfo.availablePorts()
-        for info in self.ports:             
-            self.port.addItem(info.portName())
-        self.port.activated.connect(self.selec_port)
-        # self.port.currentIndexChanged.connect(self.List_port)
-        # self.port.activated.connect(self.port_selec)
-        # self.port.currentIndexChanged.connect(self.port_selec)
+        # self.ports =QSerialPortInfo.availablePorts()
+        # for info in self.ports:             
+        #     self.port.addItem(info.portName())
+        # self.port.activated.connect(self.selec_port)
+        self.ports = list(serial.tools.list_ports.comports())
+        for i in self.ports:
+            self.port.addItem(i.device)
 
+        self.port.activated.connect(self.selec_port)
+    
         text_baud = QLabel("Baudrate")
-        # text_port.SetBackgroundColour('#F1F7EE')
         self.baud = QComboBox()
         self.baud_array=['2400','4800','9600','19200','38400','57600','74880'
         ,'115200','230400', '460800']
@@ -259,7 +228,6 @@ class Screen(QWidget):
         b1.addWidget(self.baud)
         b1.addStretch(2)
         b1.addWidget(self.connect_button) 
-        # b1.setAlignment(Qt.AlignCenter| Qt.AlignTop| Qt.AlignJustify)
         
 
         self.box_serial.setLayout(b1)
@@ -275,7 +243,6 @@ class Screen(QWidget):
         b1.addWidget(self.rec_button)
 
         b1.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
-        # b1.addStretch(1)
         self.box_rec.setLayout(b1)
         return self.box_rec
 
@@ -292,7 +259,6 @@ class Screen(QWidget):
         self._plot = RealtimePlot(self.a, self.canvas, self.fig)
 
         return self.box_plot
-
 
 # -------------------- CURRENT SETTINGS -----------------------------------------------------
     def current_settings(self):
@@ -321,7 +287,6 @@ class Screen(QWidget):
         # b1.addStretch(1)
         self.box_data.setLayout(b1)
         return self.box_data
-
         
 # -------------------- GRAPH SETTINGS -----------------------------------------------------
     def graph_settings(self):
@@ -329,15 +294,22 @@ class Screen(QWidget):
 
         self.Limit_max = QSpinBox()
         # self.value_data1.setMaximun
-        self.Limit_max.setRange(0,100)
+        self.Limit_max.setRange(-10000,10000)
         self.Limit_max.setSingleStep(10)
         self.Limit_max.setValue(100)
         text_data2 = QLabel("Y-Limit Min")
 
         self.Limit_min = QSpinBox()
-        self.Limit_min.setRange(0,100)
+        self.Limit_min.setRange(-10000,10000)
         self.Limit_min.setSingleStep(10)
         self.Limit_min.setValue(0)
+
+        self.time = QSpinBox()
+        self.time.setRange(-100000,10000000)
+        self.time.setSingleStep(100)
+        self.time.setValue(500)
+        text_data3 = QLabel("Time to update")
+        text_data4 = QLabel("[ms]")
 
         self.set_button = QPushButton('SET') 
         self.set_button.clicked.connect(self.Set_Limit)
@@ -345,16 +317,26 @@ class Screen(QWidget):
         b1 = QHBoxLayout()
         b1.addWidget(text_data1)
         b1.addWidget(self.Limit_max)
-        # b1.addStretch(1)
+        b1.setAlignment(Qt.AlignHCenter)
 
         b2 = QHBoxLayout()
         b2.addWidget(text_data2)
         b2.addWidget(self.Limit_min)
-        # b2.addStretch(1)
+        b2.setAlignment(Qt.AlignHCenter)
+
+        b4 = QHBoxLayout()
+        b4.addWidget(text_data3)
+        b4.addWidget(self.time)
+        b4.addWidget(text_data4)
+        b4.setAlignment(Qt.AlignHCenter)
 
         b3 = QVBoxLayout()
         b3.addLayout(b1)
+        b3.addStretch(1)
         b3.addLayout(b2)
+        b3.addStretch(1)
+        b3.addLayout(b4)
+        b3.addStretch(1)
         b3.addWidget(self.set_button)
         b3.addStretch(1)
         # self.box_data.setLayout(b1)
@@ -389,7 +371,6 @@ class Screen(QWidget):
 
         self.box_msg.setLayout (b1)
         return self.box_msg
-
 
 #------------------------------------------------------------------------------------------------
     def showDialog(self):
@@ -445,13 +426,10 @@ class Screen(QWidget):
         print( type(self.baud_selec))
         # print(text)
 
-    # Get Port Selected or writer
+    # Get Port Selected 
     def selec_port(self,text):
         self.port_selec = self.port.itemText(text)
         print(type(self.port_selec))
-    
-    def write_port(self,event):
-        self.port_selec = self.port.GetValue()
     
     # Start thread of Serial Communication
     def onConnect(self, event):
@@ -477,8 +455,6 @@ class Screen(QWidget):
         else:
             self.connect_button.setText('Connect')
             stop_threads = True
-            # stop_threads_1 = True
-            # wx.MessageBox(message=" Connection Ended", caption= "Disconnect")
             self.ser_msg.setText("Close")            
             # self.Serial.endApplication()
             self.port.setDisabled(False)
@@ -488,42 +464,34 @@ class Screen(QWidget):
     def Set_Limit(self,event):
         self.y_max= self.Limit_max.value()
         self.y_min= self.Limit_min.value()
+        self.time_upd = self.time.value()/1000
         self._plot.y_max = self.y_max
         self._plot.y_min = self.y_min
+        self._plot._time = self.time_upd
         # print(self.y_max)
         # print(self.y_min)
 
-    # Stop all threads 
-    def OnClose(self, event):
-        self.Serial.t1._stop()
-        self.Serial.t2._stop()
-        self._plot.t3._stop()
-        global stop_threads, stop_threads_1
-        # self.animator.event_source.stop()
-        stop_threads =True
-        stop_threads_1 = True
-        self.Destroy() 
-
     def update(self):
-        self.value_data1.setText(str(data.axis_data1[-1]))
-        self.value_data2.setText(str(data.axis_data2[-1]))
+        self.value_data1.setText(str(data.data1))
+        self.value_data2.setText(str(data.data2))
 
             
 # Class for save data received and create arrays for plotting
 class DataPlot:
     def __init__(self, max_entries = 60):
-        self.axis_t = deque([0],maxlen=max_entries)
+        self.axis_t = deque([0],maxlen=10)
         self.axis_data1 = deque([0],maxlen=max_entries)
         self.axis_data2 = deque([0],maxlen=max_entries)
         self.tim = 0
+        self.data1= 0
+        self.data2= 0
         self.data = [0, 0]
         self.data_save=[]
         self.max_entries = max_entries
         self.count=0
 
     # function for save data for plotting, save data in CSV  and update current value
-    def save_all(self,data1,data2):
-        self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S')
+    def save_all(self,data1,data2,tim):
         ######## DATA1 ##########################
         self.axis_t.append(datetime.now().strftime('%H:%M:%S'))
         # print(self.axis_t)
@@ -532,15 +500,24 @@ class DataPlot:
         ######## DATA2 ##############
         self.axis_data2.append(data2)
         # print(self.axis_data2)
-        # frame.plot_data(data.axis_data1,data.axis_t)
          
+    def save_data(self, data1,data2):
+        self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S')
+        ######## DATA1 ##########################
+        # print(self.axis_t)
+        self.data1= data1
+        # print(self.axis_data1)
+        ######## DATA2 ##############
+        self.data2= data2
+        # print(self.axis_data2)
+
     # Wait for get two data form serial before save
     def save (self,a,i):
         self.count=self.count+1
         self.data[i]=a        
         if(self.count==2):
             # print(self.data)
-            self.save_all(self.data[0],self.data[1])
+            self.save_data(self.data[0],self.data[1])
             self.count=0
             global event
             event.set()
@@ -549,6 +526,8 @@ class RealtimePlot:
     def __init__(self, a,canvas, fig):
         self.y_min = 0
         self.y_max = 100
+        self._time = 0.5
+        self.x_tim= deque([],15)
 # -------------------- PLOT SETTINGS -----------------------------------------------------
         self.a = a
         self.canvas = canvas
@@ -571,30 +550,31 @@ class RealtimePlot:
                 break
             # print(data.axis_data1)
             # print(data.axis_data2)
+            data.save_all(data.data1,data.data2,data.tim)
             self.anim()
-            time.sleep(0.5)
+            time.sleep(float(self._time))
     
     def anim (self):
         # self.a.clear()
-        self.a.set_xticklabels(data.axis_t, fontsize=8)
+
         self.a.set_ylim([self.y_min , self.y_max ])
-        # print(self.y_min,self.y_max)
         y=np.arange(self.y_min, self.y_max+5,10)
-        self.a.set_yticks(y) 
-        # self.a.set_yticklabels(y, fontsize=8)
-        self.a.autoscale_view(True)
+        self.a.set_yticks(y)
+
+        t = datetime.now() + np.arange(15) * timedelta(seconds=self._time)
+        for i in t:
+            self.x_tim.append(i.strftime('%H:%M:%S'))
+
+        # self.a.set_xticklabels(self.x_tim, fontsize=8)
+        self.a.set_xticklabels(data.axis_t, fontsize=8)
+        # print(data.axis_t)
+        self.a.autoscale_view(scalex=True, tight=True)   
+        # self.a.autoscale_view(True)   
         self.a.relim()
-        # self.a.plot(list(range(len(data.axis_data1))),data.axis_data1,'ro-', label="Data1",markersize=1, linewidth=1)
-        # self.a.plot(list(range(len(data.axis_data2))),data.axis_data2,'bo-', label="Data2",markersize=1,linewidth=1)            # self.a.plot(list(range(len(data.axis_data1))),data.axis_data1,'ro-', label="Data1",markersize=1, linewidth=1)
         self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
         self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
 
-        # self.a.legend(loc=1) 
-        # self.a.minorticks_on()
-        # self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
-        # self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
         self.fig.canvas.draw()
-        # self.fig.canvas.draw_idle()
 
 
 
@@ -608,15 +588,14 @@ if __name__ == '__main__':
     frame = Screen()
     # frame.show()
     # Main loop for GUI
-    print("gui")
     # act_gui = Thread(target=main_loop)
     # act_gui.start()
-    print("a")
+    # print("a")
     app.exec_()
     # sys.exit(app.exec_())
     stop_threads_1 = True 
     stop_threads = True 
-    print("c")
+    print("exit")
 
     
 
