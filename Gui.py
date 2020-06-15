@@ -207,7 +207,7 @@ class Screen(QWidget):
             self.port.addItem(i.device)
 
         self.port.activated.connect(self.selec_port)
-        self.port.setStyleSheet('background-color: white')
+        # self.port.setStyleSheet('background-color: white')
     
         text_baud = QLabel("Baudrate")
         self.baud = QComboBox()
@@ -217,11 +217,11 @@ class Screen(QWidget):
             self.baud.addItem(i)
         self.baud.setCurrentIndex(7 )
         self.baud.activated.connect(self.selec_baud)
-        self.baud.setStyleSheet('background-color: white')
+        # self.baud.setStyleSheet('background-color: white')
         
         self.connect_button = QPushButton('Connect')
         self.connect_button.clicked.connect(self.onConnect)
-        self.connect_button.setStyleSheet('background-color: #F2F2F2')
+        # self.connect_button.setStyleSheet('background-color: #F2F2F2')
 
         b1 = QHBoxLayout()
         b1.addWidget(text_port)
@@ -232,7 +232,7 @@ class Screen(QWidget):
         b1.addStretch(2)
         b1.addWidget(self.connect_button) 
         
-        self.box_serial.setStyleSheet("background-color: #F1F7EE")
+        # self.box_serial.setStyleSheet("background-color: #F1F7EE")
         self.box_serial.setLayout(b1)
         return self.box_serial
 
@@ -241,14 +241,14 @@ class Screen(QWidget):
         self.box_rec = QGroupBox("Record/Export")
         self.rec_button = QPushButton('REC') 
         self.rec_button.clicked.connect(self.onRec)
-        self.rec_button.setStyleSheet('background-color: #F2F2F2')
+        # self.rec_button.setStyleSheet('background-color: #F2F2F2')
 
         b1 = QHBoxLayout()
         b1.addWidget(self.rec_button)
 
         b1.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         self.box_rec.setLayout(b1)
-        self.box_rec.setStyleSheet("background-color: #F1F7EE")
+        # self.box_rec.setStyleSheet("background-color: #F1F7EE")
         return self.box_rec
 
 # ------------------ PLOT SETTINGS ------------------------------------------------------------
@@ -308,7 +308,7 @@ class Screen(QWidget):
         self.Limit_max.setRange(-10000,10000)
         self.Limit_max.setSingleStep(10)
         self.Limit_max.setValue(100)
-        self.Limit_max.setStyleSheet('background-color: white')
+        # self.Limit_max.setStyleSheet('background-color: white')
         
         
         text_data2 = QLabel("Y-Limit Min")
@@ -316,18 +316,18 @@ class Screen(QWidget):
         self.Limit_min.setRange(-10000,10000)
         self.Limit_min.setSingleStep(10)
         self.Limit_min.setValue(0)
-        self.Limit_min.setStyleSheet('background-color: white')
+        # self.Limit_min.setStyleSheet('background-color: white')
 
         self.time = QSpinBox()
         self.time.setRange(-100000,10000000)
         self.time.setSingleStep(100)
         self.time.setValue(500)
-        self.time.setStyleSheet('background-color: white')
+        # self.time.setStyleSheet('background-color: white')
         text_data3 = QLabel("Time to update")
         text_data4 = QLabel("[ms]")
 
         self.set_button = QPushButton('SET') 
-        self.set_button.setStyleSheet('background-color: #F2F2F2')
+        # self.set_button.setStyleSheet('background-color: #F2F2F2')
         self.set_button.clicked.connect(self.Set_Limit)
 
         b1 = QHBoxLayout()
@@ -358,7 +358,7 @@ class Screen(QWidget):
         # self.box_data.setLayout(b1)
         self.box_limit = QGroupBox("Graph Settings")
         self.box_limit.setLayout(b3)
-        self.box_limit.setStyleSheet("background-color: #87BBA2")    
+        # self.box_limit.setStyleSheet("background-color: #87BBA2")    
         return self.box_limit
     
 # -------------------- MESSAGE SETTINGS -----------------------------------------------------
