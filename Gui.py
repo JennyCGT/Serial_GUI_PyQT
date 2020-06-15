@@ -207,6 +207,7 @@ class Screen(QWidget):
             self.port.addItem(i.device)
 
         self.port.activated.connect(self.selec_port)
+        self.port.setStyleSheet('background-color: white')
     
         text_baud = QLabel("Baudrate")
         self.baud = QComboBox()
@@ -216,9 +217,11 @@ class Screen(QWidget):
             self.baud.addItem(i)
         self.baud.setCurrentIndex(7 )
         self.baud.activated.connect(self.selec_baud)
+        self.baud.setStyleSheet('background-color: white')
         
         self.connect_button = QPushButton('Connect')
         self.connect_button.clicked.connect(self.onConnect)
+        self.connect_button.setStyleSheet('background-color: #F2F2F2')
 
         b1 = QHBoxLayout()
         b1.addWidget(text_port)
@@ -229,7 +232,7 @@ class Screen(QWidget):
         b1.addStretch(2)
         b1.addWidget(self.connect_button) 
         
-
+        self.box_serial.setStyleSheet("background-color: #F1F7EE")
         self.box_serial.setLayout(b1)
         return self.box_serial
 
@@ -238,12 +241,14 @@ class Screen(QWidget):
         self.box_rec = QGroupBox("Record/Export")
         self.rec_button = QPushButton('REC') 
         self.rec_button.clicked.connect(self.onRec)
+        self.rec_button.setStyleSheet('background-color: #F2F2F2')
 
         b1 = QHBoxLayout()
         b1.addWidget(self.rec_button)
 
         b1.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         self.box_rec.setLayout(b1)
+        self.box_rec.setStyleSheet("background-color: #F1F7EE")
         return self.box_rec
 
 # ------------------ PLOT SETTINGS ------------------------------------------------------------
@@ -258,25 +263,30 @@ class Screen(QWidget):
         self.box_plot.setLayout(b1)
         self._plot = RealtimePlot(self.a, self.canvas, self.fig)
 
+        self.box_plot.setStyleSheet("background-color: #87BBA2")    
         return self.box_plot
 
 # -------------------- CURRENT SETTINGS -----------------------------------------------------
     def current_settings(self):
         self.box_data = QGroupBox("Current Values")
         text_data1= QLabel("Analogue Data 1")
-        text_data1.setFont(QFont ("Times",18))
+        text_data1.setFont(QFont ("Times",18,weight=QFont.Bold))
+        text_data1.setStyleSheet("color:#143642")
 
         self.value_data1 = QLabel("00")
+        self.value_data1.setStyleSheet("background-color:#F1F7EE")
         self.value_data1.setAlignment(Qt.AlignHCenter)
-        self.value_data1.setFont(QFont("Times",40))
-        
+        self.value_data1.setFont(QFont("Times",40,weight=QFont.Bold))
+                
 
         text_data2 = QLabel("Analogue Data 2")
-        text_data2.setFont(QFont ("Times",18))
+        text_data2.setFont(QFont ("Times",18,weight=QFont.Bold))
+        text_data2.setStyleSheet("color:#143642")
 
         self.value_data2 = QLabel("00")
+        self.value_data2.setStyleSheet("background-color:#F1F7EE")
         self.value_data2.setAlignment(Qt.AlignHCenter)
-        self.value_data2.setFont(QFont("Times",40))
+        self.value_data2.setFont(QFont("Times",40,weight=QFont.Bold))
 
         b1 = QVBoxLayout()
         b1.addWidget(text_data1)
@@ -286,6 +296,7 @@ class Screen(QWidget):
         b1.setAlignment(Qt.AlignHCenter)
         # b1.addStretch(1)
         self.box_data.setLayout(b1)
+        self.box_data.setStyleSheet("background-color: #87BBA2")    
         return self.box_data
         
 # -------------------- GRAPH SETTINGS -----------------------------------------------------
@@ -297,21 +308,26 @@ class Screen(QWidget):
         self.Limit_max.setRange(-10000,10000)
         self.Limit_max.setSingleStep(10)
         self.Limit_max.setValue(100)
+        self.Limit_max.setStyleSheet('background-color: white')
+        
+        
         text_data2 = QLabel("Y-Limit Min")
-
         self.Limit_min = QSpinBox()
         self.Limit_min.setRange(-10000,10000)
         self.Limit_min.setSingleStep(10)
         self.Limit_min.setValue(0)
+        self.Limit_min.setStyleSheet('background-color: white')
 
         self.time = QSpinBox()
         self.time.setRange(-100000,10000000)
         self.time.setSingleStep(100)
         self.time.setValue(500)
+        self.time.setStyleSheet('background-color: white')
         text_data3 = QLabel("Time to update")
         text_data4 = QLabel("[ms]")
 
         self.set_button = QPushButton('SET') 
+        self.set_button.setStyleSheet('background-color: #F2F2F2')
         self.set_button.clicked.connect(self.Set_Limit)
 
         b1 = QHBoxLayout()
@@ -342,6 +358,7 @@ class Screen(QWidget):
         # self.box_data.setLayout(b1)
         self.box_limit = QGroupBox("Graph Settings")
         self.box_limit.setLayout(b3)
+        self.box_limit.setStyleSheet("background-color: #87BBA2")    
         return self.box_limit
     
 # -------------------- MESSAGE SETTINGS -----------------------------------------------------
@@ -350,16 +367,18 @@ class Screen(QWidget):
         self.box_msg = QGroupBox("Message Bar")
 
         text_1 = QLabel("Serial Comunication: ")
-        text_1.setFont(QFont("Times",12))
+        text_1.setFont(QFont("Times",12,weight=QFont.Bold))
 
         self.ser_msg= QLabel("Close")
-        self.ser_msg.setFont(QFont("Times",12))
+        self.ser_msg.setFont(QFont("Times",12,weight=QFont.Bold))
+        self.ser_msg.setStyleSheet('color: #364958')
         
         text_2 = QLabel("Recording Data: ")
-        text_2.setFont(QFont("Times",12))
+        text_2.setFont(QFont("Times",12,weight=QFont.Bold))
 
         self.text_msg = QLabel('Stop') 
-        self.text_msg.setFont(QFont("Times",12))
+        self.text_msg.setFont(QFont("Times",12,weight=QFont.Bold))
+        self.text_msg.setStyleSheet('color: #364958')
 
         b1 = QHBoxLayout()
         b1.addWidget(text_1)
@@ -435,8 +454,6 @@ class Screen(QWidget):
     def onConnect(self, event):
         global stop_threads
         global stop_threads_1 
-        # global ser
-        # self.port_selec()
         print('port: '+ self.port_selec +'Baud: '+self.baud_selec)
         # print(self.connect_button.text())
         if self.connect_button.text()=='Connect':
@@ -448,7 +465,6 @@ class Screen(QWidget):
                 stop_threads_1 = False
                 print('Start')
                 self.Serial=Serial_com(self.port_selec,self.baud_selec)
-                # wx.MessageBox(message=" Connection Started", caption= "Connect")
                 self.ser_msg.setText("Open")
                 self.port.setDisabled(True)
                 self.baud.setDisabled(True)
@@ -490,7 +506,7 @@ class DataPlot:
         self.max_entries = max_entries
         self.count=0
 
-    # function for save data for plotting, save data in CSV  and update current value
+    # function for save data for plotting, save data in CSV 
     def save_all(self,data1,data2,tim):
         ######## DATA1 ##########################
         self.axis_t.append(datetime.now().strftime('%H:%M:%S'))
@@ -500,7 +516,8 @@ class DataPlot:
         ######## DATA2 ##############
         self.axis_data2.append(data2)
         # print(self.axis_data2)
-         
+
+    # function for save data incomming for serial port         
     def save_data(self, data1,data2):
         self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S')
         ######## DATA1 ##########################
@@ -555,12 +572,10 @@ class RealtimePlot:
             time.sleep(float(self._time))
     
     def anim (self):
-        # self.a.clear()
-
+        # Update Data to the plot
         self.a.set_ylim([self.y_min , self.y_max ])
         y=np.arange(self.y_min, self.y_max+5,10)
         self.a.set_yticks(y)
-
         t = datetime.now() + np.arange(15) * timedelta(seconds=self._time)
         for i in t:
             self.x_tim.append(i.strftime('%H:%M:%S'))
@@ -586,11 +601,6 @@ if __name__ == '__main__':
     # GUI panel
     app = QApplication([])
     frame = Screen()
-    # frame.show()
-    # Main loop for GUI
-    # act_gui = Thread(target=main_loop)
-    # act_gui.start()
-    # print("a")
     app.exec_()
     # sys.exit(app.exec_())
     stop_threads_1 = True 
