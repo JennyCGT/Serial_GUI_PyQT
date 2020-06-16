@@ -33,6 +33,7 @@ stop_threads = False
 stop_threads_1 = False
 flag_data=False
 flag_save= False
+line =1
 analog =0
 dato1=0
 event = Event()
@@ -104,12 +105,13 @@ class Serial_com:
                 # print(data.tim)
                 # print(data.axis_t[-1],data.axis_data1[-1], data.axis_data2[-1])
                 frame.update()
-                global flag_save
+                global flag_save, line
                 if(flag_save):
                     # print('guardar')
-                    data_save=[data.tim ,str(frame.baud_selec),str(data.data1),str(data.data2)]
+                    data_save=[str(line),data.tim ,str(frame.baud_selec),str(data.data1),str(data.data2)]
                     # print(data_save)
                     append_list_as_row(frame.path_dir,frame.data_rec, data_save)
+                    line = line+1
 
                 event.clear()
 
@@ -269,7 +271,7 @@ class Screen(QWidget):
 # -------------------- CURRENT SETTINGS -----------------------------------------------------
     def current_settings(self):
         self.box_data = QGroupBox("Current Values")
-        text_data1= QLabel("Analogue Data 1")
+        text_data1= QLabel("Analogue 1")
         text_data1.setFont(QFont ("Times",18,weight=QFont.Bold))
         text_data1.setStyleSheet("color:#143642")
 
@@ -279,7 +281,7 @@ class Screen(QWidget):
         self.value_data1.setFont(QFont("Times",40,weight=QFont.Bold))
                 
 
-        text_data2 = QLabel("Analogue Data 2")
+        text_data2 = QLabel("Analogue 2")
         text_data2.setFont(QFont ("Times",18,weight=QFont.Bold))
         text_data2.setStyleSheet("color:#143642")
 
@@ -424,9 +426,11 @@ class Screen(QWidget):
             flag_save = True
             self.rec_button.setText('STOP')
         else:
+            global line
             self.text_msg.setText('Stop')
             self.rec_button.setText('REC')        
             flag_save = False
+            line = 1
 
     # List COM availables 
     def List_port(self):
@@ -553,7 +557,8 @@ class RealtimePlot:
         self.a.minorticks_on()
         self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
         self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
-        self.fig.canvas.draw()
+        # self.fig.canvas.draw()
+        # self.animator = manim.FuncAnimation(self.fig,self.anim, interval=500,)
 
         self.t3= Thread(target = self.loop)
         self.t3.start()    
@@ -567,29 +572,41 @@ class RealtimePlot:
             # print(data.axis_data2)
             if flag_data:
                 data.save_all(data.data1,data.data2,data.tim)
+            # self.animator = manim.FuncAnimation(self.fig,self.anim, interval=500,blit=True)
             
             self.anim()
-            time.sleep(float(self._time))
+            # time.sleep(float(self._time))
     
     def anim (self):
+        start = time.process_time()
+        if flag_data:
+            data.save_all(data.data1,data.data2,data.tim)
+        self.a.clear()
         # Update Data to the plot
         self.a.set_ylim([self.y_min , self.y_max ])
         y=np.arange(self.y_min, self.y_max+5,10)
         self.a.set_yticks(y)
-        t = datetime.now() + np.arange(15) * timedelta(seconds=self._time)
-        for i in t:
-            self.x_tim.append(i.strftime('%H:%M:%S'))
 
         # self.a.set_xticklabels(self.x_tim, fontsize=8)
         self.a.set_xticklabels(data.axis_t, fontsize=8)
         # print(data.axis_t)
-        self.a.autoscale_view(scalex=True, tight=True)   
+        # self.a.autoscale_view(scalex=True, tight=True)   
         # self.a.autoscale_view(True)   
-        self.a.relim()
-        self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
-        self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
-
+        # self.a.relim()
+        # self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
+        # self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
+        self.a.plot(list(range(len(data.axis_data1))),data.axis_data1,'ro-', label="Analogue 1",markersize=1, linewidth=1)
+        self.a.plot(list(range(len(data.axis_data2))),data.axis_data2,'bo-', label="Analogue 2",markersize=1,linewidth=1)
+        self.a.legend(loc=1) 
+        self.a.grid()
+        # self.a.minorticks_on()
+        # self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
+        # self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
         self.fig.canvas.draw()
+        # self.fig.canvas.flush_events()
+        
+        stop = time.process_time()
+        print(stop-start)
 
 
 
