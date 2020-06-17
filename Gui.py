@@ -14,6 +14,7 @@ import matplotlib as mtp
 mtp.use('QT5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import matplotlib.animation as manim
 from datetime import datetime, timedelta
 from PyQt5.QtCore import QDateTime, Qt, QTimer
@@ -321,9 +322,9 @@ class Screen(QWidget):
         # self.Limit_min.setStyleSheet('background-color: white')
 
         self.time = QSpinBox()
-        self.time.setRange(-100000,10000000)
+        self.time.setRange(400,10000000)
         self.time.setSingleStep(100)
-        self.time.setValue(500)
+        self.time.setValue(400)
         # self.time.setStyleSheet('background-color: white')
         text_data3 = QLabel("Time to update")
         text_data4 = QLabel("[ms]")
@@ -521,7 +522,7 @@ class DataPlot:
 
     # function for save data incomming for serial port         
     def save_data(self, data1,data2):
-        self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S')
+        self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S.%f')
         ######## DATA1 ##########################
         # print(self.axis_t)
         self.data1= data1
@@ -545,23 +546,31 @@ class RealtimePlot:
     def __init__(self, a,canvas, fig):
         self.y_min = 0
         self.y_max = 100
-        self._time = 0.5
-        self.x_tim= deque([],15)
+        self._time = 0.4
 # -------------------- PLOT SETTINGS -----------------------------------------------------
         self.a = a
         self.canvas = canvas
         self.fig = fig
         self.lineplot, = self.a.plot([],[],'ro-', label="Data1",markersize=1, linewidth=1)
         self.lineplot1, = self.a.plot( [],[],'bo-', label="Data2",markersize=1,linewidth=1)
+        
+        self.a.set_ylim([self.y_min , self.y_max ])
+        y=np.arange(self.y_min, self.y_max+5,10)
+        self.a.set_yticks(y)
+
         self.a.legend(loc=1) 
-        self.a.minorticks_on()
-        self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
-        self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
-        # self.fig.canvas.draw()
+        # self.a.minorticks_on()
+        # self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
+        # self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
+
+        self.fig.canvas.draw()
         # self.animator = manim.FuncAnimation(self.fig,self.anim, interval=500,)
+        # self.axbackground = self.fig.canvas.copy_from_bbox(self.a.bbox)
+        # plt.show(block=True)
 
         self.t3= Thread(target = self.loop)
-        self.t3.start()    
+        self.t3.start()
+    
     # Plotting Real timeF
     def loop (self):
         while True:
@@ -575,38 +584,59 @@ class RealtimePlot:
             # self.animator = manim.FuncAnimation(self.fig,self.anim, interval=500,blit=True)
             
             self.anim()
-            # time.sleep(float(self._time))
+            # print(self._time-0.3)
+            time.sleep(self._time-0.3)
+                # time.sleep(float(self._time))
     
     def anim (self):
-        start = time.process_time()
-        if flag_data:
-            data.save_all(data.data1,data.data2,data.tim)
-        self.a.clear()
+        # start = time.process_time()
+
+        # if flag_data:
+        #     data.save_all(data.data1,data.data2,data.tim)
         # Update Data to the plot
+
+        # y=np.arange(self.y_min, self.y_max+5,10)
+        # self.a.set_yticks(y)
+
+        # self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
+        # self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
+
+        # self.a.clear()
+        # self.fig.canvas.restore_region(self.axbackground)
+        # self.fig.canvas.blit(self.a.bbox)
+        # self.a.draw(self.lineplot)
+        # self.a.draw(self.lineplot1)
+
+
+        # self.a.plot(list(range(len(data.axis_data1))),data.axis_data1,'ro-', label="Analogue 1",markersize=1, linewidth=1)
+        # self.a.plot(list(range(len(data.axis_data2))),data.axis_data2,'bo-', label="Analogue 2",markersize=1,linewidth=1)
+
+        self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
+        self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
+
+        self.a.draw_artist(self.lineplot)
+        self.a.draw_artist(self.lineplot1)
+
+        self.a.set_xticklabels(data.axis_t, fontsize=8)
+
         self.a.set_ylim([self.y_min , self.y_max ])
         y=np.arange(self.y_min, self.y_max+5,10)
         self.a.set_yticks(y)
+        self.a.autoscale_view(True)   
+        self.a.relim()
 
-        # self.a.set_xticklabels(self.x_tim, fontsize=8)
-        self.a.set_xticklabels(data.axis_t, fontsize=8)
-        # print(data.axis_t)
-        # self.a.autoscale_view(scalex=True, tight=True)   
-        # self.a.autoscale_view(True)   
-        # self.a.relim()
-        # self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
-        # self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
-        self.a.plot(list(range(len(data.axis_data1))),data.axis_data1,'ro-', label="Analogue 1",markersize=1, linewidth=1)
-        self.a.plot(list(range(len(data.axis_data2))),data.axis_data2,'bo-', label="Analogue 2",markersize=1,linewidth=1)
-        self.a.legend(loc=1) 
-        self.a.grid()
-        # self.a.minorticks_on()
-        # self.a.grid(which='major', linestyle='-', linewidth='0.5', color='black') 
-        # self.a.grid(which='minor', linestyle=':', linewidth='0.5', color='black') 
+
+
+        # self.a.set_xticklabels(data.axis_t, fontsize=8)
+        # plt.show(0.1)
+        # self.fig.canvas.blit() 
         self.fig.canvas.draw()
-        # self.fig.canvas.flush_events()
+        # self.fig.canvas.update()
+
+        self.fig.canvas.flush_events()
         
-        stop = time.process_time()
-        print(stop-start)
+        # stop = time.process_time()
+        # print(stop-start)
 
 
 
@@ -618,6 +648,7 @@ if __name__ == '__main__':
     # GUI panel
     app = QApplication([])
     frame = Screen()
+    # _plot = RealtimePlot(frame.a,frame.canvas, frame.fig)
     app.exec_()
     # sys.exit(app.exec_())
     stop_threads_1 = True 
