@@ -98,7 +98,7 @@ class Serial_com:
                 global flag_save, line
                 # If rec button was pressed, the data are saved in CSV file
                 if(flag_save):
-                    data_save=[str(line),data.tim ,str(frame.baud_selec),str(data.data1),str(data.data2)]
+                    data_save=[str(line),data.tim ,str(data.data1),str(data.data2)]
                     # function for save data
                     append_list_as_row(frame.path_dir,frame.data_rec, data_save)
                     line = line+1
@@ -381,13 +381,11 @@ class Screen(QWidget):
     def onRec(self,event):
         # ------------ Function for export data
         if self.rec_button.text()=='REC':
-            print('rec')
             self.data_rec = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             self.text_msg.setText('Exporting file ...'+ self.data_rec+'.csv')
             # f=self.path_dir+"\\"+self.data_rec+'.csv'
             f='csv/'+self.data_rec+'.csv'
-            print(self.path_dir)
-
+            
             # Create CSV file
             with open(f, 'w') as write_obj:
             # Create a writer object from csv module
@@ -406,7 +404,6 @@ class Screen(QWidget):
 
     # List COM availables 
     def List_port(self):
-        # print(serial_ports)
         self.port.clear()
         ports = list(serial.tools.list_ports.comports())
         lst = []
@@ -424,7 +421,6 @@ class Screen(QWidget):
     # Start thread of Serial Communication
     def onConnect(self, event):
         global stop_threads,stop_threads_1, flag_data 
-        print('port: '+ self.port_selec +'Baud: '+self.baud_selec)
         # Detect if the port was selected
         if self.connect_button.text()=='Connect':
             if(self.port_selec == '' or self.port_selec == 'Choose a port'):
@@ -434,7 +430,6 @@ class Screen(QWidget):
                 self.connect_button.setText('Disconnect')
                 stop_threads = False
                 stop_threads_1 = False
-                print('Start')
                 self.Serial=Serial_com(self.port_selec,self.baud_selec)
                 self.ser_msg.setText("Open")
                 # Disable the options for port and baudrate
@@ -499,7 +494,6 @@ class DataPlot:
         self.count=self.count+1
         self.data[i]=a        
         if(self.count==2):
-            # print(self.data)
             self.save_data(self.data[0],self.data[1])
             self.count=0
             global event
@@ -566,7 +560,6 @@ if __name__ == '__main__':
     app.exec_()
     stop_threads_1 = True 
     stop_threads = True 
-    print("exit")
 
     
 
