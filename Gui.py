@@ -5,6 +5,7 @@ import sys
 import glob
 import os
 import struct   
+import json
 from csv import writer
 import numpy as np
 from collections import deque 
@@ -37,7 +38,8 @@ flag_save= False
 line =1
 event = Event()
 data_serial = [b'', b'', b'',b'']
-
+with open ('settings.json') as _file:
+    settings = json.loads(_file.read())
 # Class for serial Comunication 
 class Serial_com:
     def __init__(self, port, baud):
@@ -104,7 +106,6 @@ class Serial_com:
                     line = line+1
                 event.clear()
 
-
 # A list of the serial ports available on the system
 def serial_ports():
     if sys.platform.startswith('win'):
@@ -127,7 +128,6 @@ def serial_ports():
             pass
     return result
 
-
 # Function for save data in CSV file
 def append_list_as_row(path,file_name, list_of_elem):
     # Open file in append mode
@@ -138,12 +138,11 @@ def append_list_as_row(path,file_name, list_of_elem):
         # Add contents of list as last row in the csv file
         csv_writer.writerow(list_of_elem)
 
-
-
 # Class of GUI
 class Screen(QWidget):
     def __init__(self, parent = None):
         super(Screen, self).__init__(parent)
+        global settings
         self.port_selec=''
         self.baud_selec='115200'
         self.choices=[]
@@ -154,7 +153,7 @@ class Screen(QWidget):
         self.time_upd= 0.5
 
         grid = QGridLayout()
-        grid.setColumnStretch(0, 2)
+        grid.setColumnStretch(0, 3)
         grid.setColumnStretch(1, 1)        
         
         grid.setRowStretch(2,5)
@@ -170,7 +169,6 @@ class Screen(QWidget):
         grid.addWidget(self.graph_settings(), 2, 1)
         self.setLayout(grid)
 
-        self.setFixedSize(1000,600)
         self.setWindowTitle('Datalogger')
         self.show()
 
@@ -178,11 +176,14 @@ class Screen(QWidget):
 # ----------------------BOX SERIAL SETTINGS--------------------------------------------------
     def serial_settings(self):
         self.box_serial = QGroupBox("Serial Settings")
-        text_port = QLabel("Port")
-        # text_port.SetBackgroundColour('#F1F7EE')
-        
+        text_port = QLabel("Port")        
         self.port = QComboBox()
-        self.port.addItem("Choose a Port")
+        # self.port.addItem("Choose a Port")
+        if(settings['port'] == ""):
+            self.port_selec =""
+            self.port.addItem("Choose a Port")
+        else:
+            self.port_selec = settings['port']
         # self.ports =QSerialPortInfo.availablePorts()
         # for info in self.ports:             
         #     self.port.addItem(info.portName())
@@ -192,7 +193,6 @@ class Screen(QWidget):
             self.port.addItem(i.device)
 
         self.port.activated.connect(self.selec_port)
-        # self.port.setStyleSheet('background-color: white')
     
         text_baud = QLabel("Baudrate")
         self.baud = QComboBox()
@@ -239,7 +239,8 @@ class Screen(QWidget):
 # ----------------------PLOT SETTINGS ---------------------------------------------------------
     def plot_settings(self):
         self.box_plot = QGroupBox("Real Time Graph")
-        self.fig = Figure(figsize=([6.2,5]),tight_layout = {'pad': 2})
+        # self.fig = Figure(figsize=([10,5]),tight_layout={'w_pad':0.5, 'h_pad':1.0})
+        self.fig = Figure(figsize=([10,5]),tight_layout={'rect':(0,0,1,1)})
         self.a = self.fig.add_subplot(111)
         self.canvas = FigureCanvasQTAgg(self.fig)
         b1 = QHBoxLayout()
@@ -286,25 +287,25 @@ class Screen(QWidget):
         
 # -------------------- GRAPH SETTINGS -----------------------------------------------------
     def graph_settings(self):
-        text_data1= QLabel("Y-Limit Max")
+        text_data1= QLabel("Y-Limit Max    ")
 
         self.Limit_max = QSpinBox()
         self.Limit_max.setRange(-10000,10000)
         self.Limit_max.setSingleStep(10)
-        self.Limit_max.setValue(100)
+        self.Limit_max.setValue(settings['max'])
         
-        text_data2 = QLabel("Y-Limit Min")
+        text_data2 = QLabel("Y-Limit Min    ")
         self.Limit_min = QSpinBox()
         self.Limit_min.setRange(-10000,10000)
         self.Limit_min.setSingleStep(10)
-        self.Limit_min.setValue(0)
+        self.Limit_min.setValue(settings['min'])
 
         self.time = QSpinBox()
-        self.time.setRange(400,10000000)
-        self.time.setSingleStep(100)
-        self.time.setValue(400)
-        text_data3 = QLabel("Time to update")
-        text_data4 = QLabel("[ms]")
+        self.time.setRange(0,10000000)
+        self.time.setMinimum(0)
+        self.time.setSingleStep(10)
+        self.time.setValue(settings['step'])
+        text_data3 = QLabel("Graph step")
 
         self.set_button = QPushButton('SET') 
         self.set_button.clicked.connect(self.Set_Limit)
@@ -322,7 +323,6 @@ class Screen(QWidget):
         b4 = QHBoxLayout()
         b4.addWidget(text_data3)
         b4.addWidget(self.time)
-        b4.addWidget(text_data4)
         b4.setAlignment(Qt.AlignHCenter)
 
         b3 = QVBoxLayout()
@@ -417,6 +417,9 @@ class Screen(QWidget):
     # Get Port Selected 
     def selec_port(self,text):
         self.port_selec = self.port.itemText(text)
+        settings['port']= self.port_selec
+        with open ('settings.json','w') as _file:
+            json.dump(settings,_file)
     
     # Start thread of Serial Communication
     def onConnect(self, event):
@@ -448,10 +451,15 @@ class Screen(QWidget):
     def Set_Limit(self,event):
         self.y_max= self.Limit_max.value()
         self.y_min= self.Limit_min.value()
-        self.time_upd = self.time.value()/1000
+        self.time_upd = self.time.value()
+        settings['max'] = self.y_max
+        settings['min'] = self.y_min
+        settings['step'] = self.time_upd
         self._plot.y_max = self.y_max
         self._plot.y_min = self.y_min
         self._plot._time = self.time_upd
+        with open ('settings.json','w') as _file:
+            json.dump(settings,_file)
 
     # Update the Current values on the GUI
     def update(self):
@@ -501,9 +509,10 @@ class DataPlot:
 
 class RealtimePlot:
     def __init__(self, a,canvas, fig):
-        self.y_min = 0
-        self.y_max = 100
-        self._time = 0.4
+        global settings
+        self.y_min = settings['min']
+        self.y_max = settings['max']
+        self._time = settings['step']
 # -------------------- PLOT SETTINGS -----------------------------------------------------
         self.a = a
         self.canvas = canvas
@@ -512,7 +521,7 @@ class RealtimePlot:
         self.lineplot1, = self.a.plot( [],[],'bo-', label="Analogue2",markersize=1,linewidth=1)
         
         self.a.set_ylim([self.y_min , self.y_max ])
-        y=np.arange(self.y_min, self.y_max+5,10)
+        y=np.arange(self.y_min, self.y_max+1,10)
         self.a.set_yticks(y)
         self.a.legend(loc=2,fontsize="x-small") 
         self.fig.canvas.draw()
@@ -530,7 +539,7 @@ class RealtimePlot:
                 data.save_all(data.data1,data.data2,data.tim)
             
             self.anim()
-            time.sleep(self._time-0.3)
+            time.sleep(0.1)
     
     def anim (self):
         # Refresh the data, labels and limits in the graph
@@ -540,12 +549,12 @@ class RealtimePlot:
         self.a.draw_artist(self.lineplot1)
         self.a.set_xticklabels(data.axis_t, fontsize=8)
         self.a.set_ylim([self.y_min , self.y_max ])
-        y=np.arange(self.y_min, self.y_max+5,10)
+        y=np.arange(self.y_min, self.y_max+1,self._time)
         self.a.set_yticks(y)
         self.a.autoscale_view(True)   
         self.a.relim()
         self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        # self.fig.canvas.flush_events()
 
 
 
