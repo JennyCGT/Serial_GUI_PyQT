@@ -81,10 +81,15 @@ class Serial_com:
                 # use look for blocking changes from other threads
                 look.acquire()
                 data_serial =c
-                if(data_serial[0]==b'R'):
+                if(data_serial[0]==b'A'):
                     data.save(data_serial[2],0)
-                if(data_serial[0]==b'B'):
-                    data.save(data_serial[2],1)                
+                if(data_serial[0]==b'I'):
+                    data.save(data_serial[2],1)               
+                if(data_serial[0]==b'N'):
+                    data.save(data_serial[2],2)
+                if(data_serial[0]==b'C'):
+                    data.save(data_serial[2],3)               
+            
                 look.release()
         self.ser.close()    
     
@@ -100,7 +105,7 @@ class Serial_com:
                 global flag_save, line
                 # If rec button was pressed, the data are saved in CSV file
                 if(flag_save):
-                    data_save=[str(line),data.tim ,str(data.data1),str(data.data2)]
+                    data_save=[str(line),data.tim ,str(data.data1),str(data.data2),str(data.data3),str(data.data4)]
                     # function for save data
                     append_list_as_row(frame.path_dir,frame.data_rec, data_save)
                     line = line+1
@@ -153,20 +158,17 @@ class Screen(QWidget):
         self.time_upd= 0.5
 
         grid = QGridLayout()
-        grid.setColumnStretch(0, 3)
+        grid.setColumnStretch(0, 4)
         grid.setColumnStretch(1, 1)        
         
-        grid.setRowStretch(2,5)
-
-        grid.setRowMinimumHeight(0,1)
-
+    
         grid.addWidget(self.serial_settings(), 0, 0)
-        grid.addWidget(self.plot_settings(), 1, 0,2,1)
-        grid.addWidget(self.message(),3,0,1,2)
+        grid.addWidget(self.plot_settings(), 1, 0,3,1)
+        grid.addWidget(self.message(),4,0,1,2)
 
         grid.addWidget(self.record_settings(), 0, 1)
-        grid.addWidget(self.current_settings(), 1, 1)
-        grid.addWidget(self.graph_settings(), 2, 1)
+        grid.addWidget(self.current_settings(), 1, 1,2,1)
+        grid.addWidget(self.graph_settings(), 3, 1)
         self.setLayout(grid)
 
         self.setWindowTitle('Datalogger')
@@ -255,33 +257,68 @@ class Screen(QWidget):
 # -------------------- CURRENT SETTINGS -----------------------------------------------------
     def current_settings(self):
         self.box_data = QGroupBox("Current Values")
-        text_data1= QLabel("Analogue 1")
-        text_data1.setFont(QFont ("Times",18,weight=QFont.Bold))
+        text_data1= QLabel("Photodiode A Max")
+        text_data1.setFont(QFont ("Times",12,weight=QFont.Bold))
         text_data1.setStyleSheet("color:#143642")
 
         self.value_data1 = QLabel("00")
         self.value_data1.setStyleSheet("background-color:#F1F7EE")
         self.value_data1.setAlignment(Qt.AlignHCenter)
-        self.value_data1.setFont(QFont("Times",40,weight=QFont.Bold))
+        self.value_data1.setFont(QFont("Times",23,weight=QFont.Bold))
                 
 
-        text_data2 = QLabel("Analogue 2")
-        text_data2.setFont(QFont ("Times",18,weight=QFont.Bold))
+        text_data2 = QLabel("Photodiode A Min")
+        text_data2.setFont(QFont ("Times",12,weight=QFont.Bold))
         text_data2.setStyleSheet("color:#143642")
 
         self.value_data2 = QLabel("00")
         self.value_data2.setStyleSheet("background-color:#F1F7EE")
         self.value_data2.setAlignment(Qt.AlignHCenter)
-        self.value_data2.setFont(QFont("Times",40,weight=QFont.Bold))
+        self.value_data2.setFont(QFont("Times",23,weight=QFont.Bold))
+        self.box_data = QGroupBox("Current Values")
 
-        b1 = QVBoxLayout()
+        text_data3= QLabel("Photodiode B")
+        text_data3.setFont(QFont ("Times",12,weight=QFont.Bold))
+        text_data3.setStyleSheet("color:#143642")
+
+        self.value_data3 = QLabel("00")
+        self.value_data3.setStyleSheet("background-color:#F1F7EE")
+        self.value_data3.setAlignment(Qt.AlignHCenter)
+        self.value_data3.setFont(QFont("Times",23,weight=QFont.Bold))
+                
+
+        text_data4 = QLabel("Calibrated B")
+        text_data4.setFont(QFont ("Times",12,weight=QFont.Bold))
+        text_data4.setStyleSheet("color:#143642")
+
+        self.value_data4 = QLabel("00")
+        self.value_data4.setStyleSheet("background-color:#F1F7EE")
+        self.value_data4.setAlignment(Qt.AlignHCenter)
+        self.value_data4.setFont(QFont("Times",23,weight=QFont.Bold))
+
+        b1 = QHBoxLayout()
         b1.addWidget(text_data1)
-        b1.addWidget(self.value_data1)
         b1.addWidget(text_data2)
-        b1.addWidget(self.value_data2)
-        b1.setAlignment(Qt.AlignHCenter)
+        b2 = QHBoxLayout()
+        b2.addWidget(self.value_data1)
+        b2.addWidget(self.value_data2)
+        b3 = QHBoxLayout()                
+        b3.addWidget(text_data3)
+        b3.addWidget(text_data4)
+        b4 = QHBoxLayout()                
+        b4.addWidget(self.value_data3)
+        b4.addWidget(self.value_data4)
+        # b1.setAlignment(Qt.AlignHCenter)
         # b1.addStretch(1)
-        self.box_data.setLayout(b1)
+        b5 = QVBoxLayout()
+        b5.addLayout(b1)
+        b5.addSpacing(1)
+        b5.addLayout(b2)
+        b5.addSpacing(10)
+        b5.addLayout(b3)
+        b5.addSpacing(1)
+        b5.addLayout(b4)
+        self.box_data.setLayout(b5)
         self.box_data.setStyleSheet("background-color: #87BBA2")    
         return self.box_data
         
@@ -391,7 +428,7 @@ class Screen(QWidget):
             # Create a writer object from csv module
                 csv_writer = writer(write_obj)
             # Add header to the csv file
-                csv_writer.writerow(['Date Time','Baudrate','Data analog1','Data analog2'])
+                csv_writer.writerow(['','Date Time','Photodiode_A_Max','Photodiode_A_Min','Photodiode_B','Calibrated_B'])
             global flag_save
             flag_save = True
             self.rec_button.setText('STOP')
@@ -465,6 +502,8 @@ class Screen(QWidget):
     def update(self):
         self.value_data1.setText(str(data.data1))
         self.value_data2.setText(str(data.data2))
+        self.value_data3.setText(str(data.data3))
+        self.value_data4.setText(str(data.data4))
 
             
 # Class for save data received and create arrays for plotting
@@ -473,36 +512,48 @@ class DataPlot:
         self.axis_t = deque([0],maxlen=10)
         self.axis_data1 = deque([0],maxlen=max_entries)
         self.axis_data2 = deque([0],maxlen=max_entries)
+        self.axis_data3 = deque([0],maxlen=max_entries)
+        self.axis_data4 = deque([0],maxlen=max_entries)
         self.tim = 0
         self.data1= 0
         self.data2= 0
-        self.data = [0, 0]
+        self.data3= 0
+        self.data4= 0
+        self.data = [0, 0, 0, 0]
         self.data_save=[]
         self.max_entries = max_entries
         self.count=0
 
     # function for save data for plotting, save data in CSV 
-    def save_all(self,data1,data2,tim):
+    def save_all(self,data1,data2,data3,data4,tim):
         ######## DATA1 ##########################
         self.axis_t.append(datetime.now().strftime('%H:%M:%S'))
         self.axis_data1.append(data1)
         ######## DATA2 ##############
         self.axis_data2.append(data2)
+        ######## DATA2 ##############
+        self.axis_data3.append(data3)
+        ######## DATA2 ##############
+        self.axis_data4.append(data4)
 
     # function for save data incomming for serial port         
-    def save_data(self, data1,data2):
+    def save_data(self, data1,data2,data3,data4):
         self.tim=datetime.now().strftime('%Y %m %d %H:%M:%S.%f')
         ######## DATA1 ##########################
         self.data1= data1
         ######## DATA2 ##############
         self.data2= data2
+        ######## DATA3 ##############
+        self.data3= data3
+        ######## DATA2 ##############
+        self.data4= data4
 
     # Wait for get two data form serial before save
     def save (self,a,i):
         self.count=self.count+1
-        self.data[i]=a        
-        if(self.count==2):
-            self.save_data(self.data[0],self.data[1])
+        self.data[i]=a 
+        if(self.count==4):
+            self.save_data(self.data[0],self.data[1],self.data[2],self.data[3])
             self.count=0
             global event
             event.set()
@@ -517,8 +568,10 @@ class RealtimePlot:
         self.a = a
         self.canvas = canvas
         self.fig = fig
-        self.lineplot, = self.a.plot([],[],'ro-', label="Analogue1",markersize=1, linewidth=1)
-        self.lineplot1, = self.a.plot( [],[],'bo-', label="Analogue2",markersize=1,linewidth=1)
+        self.lineplot, = self.a.plot([],[],'ro-', label="Photodiode A Max",markersize=1, linewidth=1)
+        self.lineplot1, = self.a.plot( [],[],'bo-', label="Photodiode A Min",markersize=1,linewidth=1)
+        self.lineplot2, = self.a.plot([],[],'go-', label="Photodiode B",markersize=1, linewidth=1)
+        self.lineplot3, = self.a.plot( [],[],'yo-', label="Calibrated B",markersize=1,linewidth=1)
         
         self.a.set_ylim([self.y_min , self.y_max ])
         y=np.arange(self.y_min, self.y_max+1,10)
@@ -536,7 +589,7 @@ class RealtimePlot:
                 break
             # Update data for graph
             if flag_data:
-                data.save_all(data.data1,data.data2,data.tim)
+                data.save_all(data.data1,data.data2,data.data3,data.data4,data.tim)
             
             self.anim()
             time.sleep(0.1)
@@ -545,8 +598,13 @@ class RealtimePlot:
         # Refresh the data, labels and limits in the graph
         self.lineplot.set_data(np.arange(0,len(data.axis_data1),1),np.array(data.axis_data1))
         self.lineplot1.set_data(np.arange(0,len(data.axis_data2),1),np.array(data.axis_data2))
+        self.lineplot2.set_data(np.arange(0,len(data.axis_data3),1),np.array(data.axis_data3))
+        self.lineplot3.set_data(np.arange(0,len(data.axis_data4),1),np.array(data.axis_data4))
+
         self.a.draw_artist(self.lineplot)
         self.a.draw_artist(self.lineplot1)
+        self.a.draw_artist(self.lineplot2)
+        self.a.draw_artist(self.lineplot3)
         self.a.set_xticklabels(data.axis_t, fontsize=8)
         self.a.set_ylim([self.y_min , self.y_max ])
         y=np.arange(self.y_min, self.y_max+1,self._time)
